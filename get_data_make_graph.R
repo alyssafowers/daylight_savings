@@ -91,6 +91,24 @@ colnames(dusk) <- c("dusk_day_frac", "dusk_time", "dusk_hms", "date", "dusk_dst"
 sun <- inner_join(sun, dawn)
 sun <- inner_join(sun, dusk)
 
+sun_tidy_time <- sun %>% 
+                  select(date, sunrise_dst, sunset_dst, dawn_dst,dusk_dst, solarnoon_dst) %>%
+                  pivot_longer(cols = c(sunrise_dst, sunset_dst, dawn_dst,dusk_dst, solarnoon_dst),
+                               names_to = "time", values_to = "hms")
+
+ggplot()+geom_path(data = sun_tidy_time, aes(x = date, y = hms, group = time))+
+  scale_y_datetime(breaks = "1 hour")+scale_x_date(date_breaks = "1 month", labels = NULL) + theme_classic()
+
+
+
+
+
+
+
+
+###old scratch, do not use
+
+#when I was tinkering with intervals:
 
 #calculating fractions of day in each interval:
 
@@ -106,36 +124,19 @@ sum(sun$before_dawn, sun$dawn_to_sunrise, sun$sunrise_to_sunset,
     sun$sunset_to_dusk, sun$after_dusk)/nrow(sun)
 
 sun_tidy_interval <- sun %>% select(date, before_dawn, dawn_to_sunrise, sunrise_to_noon, noon_to_sunset,
-                sunset_to_dusk, after_dusk) %>% 
-                pivot_longer(cols = c(before_dawn, dawn_to_sunrise, 
-                  sunrise_to_noon, noon_to_sunset, sunset_to_dusk, after_dusk), names_to = "interval",
-                  values_to = "day_frac")
+                                    sunset_to_dusk, after_dusk) %>% 
+  pivot_longer(cols = c(before_dawn, dawn_to_sunrise, 
+                        sunrise_to_noon, noon_to_sunset, sunset_to_dusk, after_dusk), names_to = "interval",
+               values_to = "day_frac")
 
 sun_tidy_interval$interval_order <- factor(sun_tidy_interval$interval, levels = c("before_dawn",
-                             "dawn_to_sunrise", "sunrise_to_noon", "noon_to_sunset", "sunset_to_dusk",
-                             "after_dusk"))
-
-sun_tidy_time <- sun %>% 
-                  select(date, sunrise_dst, sunset_dst, dawn_dst,dusk_dst, solarnoon_dst) %>%
-                  pivot_longer(cols = c(sunrise_dst, sunset_dst, dawn_dst,dusk_dst, solarnoon_dst),
-                               names_to = "time", values_to = "hms")
+                                                                                  "dawn_to_sunrise", "sunrise_to_noon", "noon_to_sunset", "sunset_to_dusk",
+                                                                                  "after_dusk"))
 
 ggplot()+geom_area(data = sun_tidy_interval, aes(x = date, y = day_frac, fill = interval_order))
 
-ggplot()+geom_path(data = sun_tidy_time, aes(x = date, y = hms, group = time))+
-  scale_y_datetime(limits = c(as.POSIXct("00:00:01", format = "%H:%M:%S"), as.POSIXct("23:59:59", format = "%H:%M:%S")), breaks = "1 hour")+scale_x_date(date_breaks = "1 month", labels = NULL) + theme_classic()
-                      
-                      
-  theme_classic()
 
 
-
-
-
-
-
-
-###old scratch, do not use
 ggplot(data = sun) + geom_line(aes(x = date, y = dawn_hms)) + 
   geom_line(aes(x = date, y = sunrise_hms))+
   geom_line(aes(x = date, y = solarnoon_hms)) +
